@@ -1,14 +1,3 @@
-
-
-# ------------------------------------------------------------
-# Gwent Police Crime — Predictive Analytics Dashboard (Streamlit)
-# Author: Ammar + ChatGPT
-# ------------------------------------------------------------
-# How to run locally:
-#   1) Install deps (once):  pip install streamlit pandas numpy scikit-learn plotly altair
-#   2) Run:                  streamlit run gwent_crime_dashboard.py
-# ------------------------------------------------------------
-
 import io
 import os
 import sys
@@ -33,22 +22,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
 
-# -------------------------
-# Page config
-# -------------------------
 st.set_page_config(
     page_title="Gwent Crime — Predictive Analytics Dashboard",
     page_icon="🚓",
     layout="wide"
 )
 
-st.title("🚓 Gwent Police Crime — Predictive Analytics Dashboard")
+st.title("Gwent Police Crime — Predictive Analytics Dashboard")
 st.caption("EDA • Predictive Modeling • Interactive Insights")
 
-
-# -------------------------
-# Helper functions
-# -------------------------
 @st.cache_data(show_spinner=False)
 def load_csv(file: t.Union[str, io.BytesIO]) -> pd.DataFrame:
     """
@@ -65,11 +47,6 @@ def load_csv(file: t.Union[str, io.BytesIO]) -> pd.DataFrame:
         .str.replace("-", "_")
     )
 
-    # Police.UK canonical:
-    # month, reported_by, falls_within, longitude, latitude, location,
-    # lsoa_code, lsoa_name, crime_type, last_outcome_category, context
-    # Some datasets may include "crime_id".
-    # Parse month to datetime
     if "month" in df.columns:
         try:
             df["month"] = pd.to_datetime(df["month"], errors="coerce")
@@ -122,11 +99,8 @@ def make_confusion_df(y_true, y_pred, labels) -> pd.DataFrame:
     return pd.DataFrame(cm, index=pd.Index(labels, name="True"), columns=pd.Index(labels, name="Pred"))
 
 
-# -------------------------
-# Sidebar — Data input
-# -------------------------
 st.sidebar.header("📥 Data")
-st.sidebar.write("Upload your Police.UK Gwent CSV or use the sample path if running in this notebook.")
+st.sidebar.write("Upload your Police.UK CSV or use the sample path if running in this notebook.")
 
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"], help="Police.UK street-level CSV (e.g., 2022-07-gwent-street.csv)")
 
@@ -159,9 +133,6 @@ st.success(f"Loaded {len(df):,} rows • {df.shape[1]} columns")
 with st.expander("🔎 Quick Null Report", expanded=False):
     st.dataframe(basic_null_report(df))
 
-# -------------------------
-# Filters
-# -------------------------
 st.sidebar.header("🔍 Filters")
 
 # Crime type filter
@@ -201,9 +172,9 @@ if selected_lsoas and "lsoa_name" in df_f.columns:
 
 st.caption(f"Filters applied → Rows: **{len(df_f):,}**")
 
-# -------------------------
-# EDA
-# -------------------------
+
+# EDA Design Starts from Here...............................
+
 st.header("📊 Exploratory Data Analysis (EDA)")
 
 colA, colB = st.columns(2)
@@ -262,10 +233,9 @@ with st.expander("🔬 Drill-down Table", expanded=False):
     cols_show = [c for c in ["month", "crime_type", "lsoa_name", "location", "last_outcome_category", "latitude", "longitude"] if c in df_f.columns]
     st.dataframe(df_f[cols_show].head(1000))
 
-# -------------------------
-# Predictive Modeling
-# -------------------------
-st.header("🤖 Predictive Model")
+# Predictive Modeling..............................
+
+st.header("Predictive Model")
 
 # Target selection
 possible_targets = [c for c in ["crime_type", "last_outcome_category"] if c in df.columns]
@@ -355,7 +325,7 @@ with st.expander("📄 Classification Report", expanded=False):
 # -------------------------
 # Interactive Predictor
 # -------------------------
-st.header("🔮 Try a Prediction")
+st.header("Try a Prediction")
 
 def make_predict_input_ui(selected_features: t.List[str]) -> pd.DataFrame:
     """
@@ -386,10 +356,6 @@ if st.button("Predict"):
     pred = pipe.predict(pred_input)[0]
     st.success(f"**Predicted {target_col}:** {pred}")
 
-
-# -------------------------
-# Download buttons
-# -------------------------
 st.header("📥 Downloads")
 
 # Filtered data
@@ -405,29 +371,8 @@ except Exception as e:
     st.info(f"Pickle unavailable: {e}")
 
 
-# -------------------------
-# Methodology & Recommendations
-# -------------------------
 st.header("🧭 Methodology & Business Recommendations")
 st.markdown("""
-**Approach**  
-1. **Data Wrangling & EDA:** Cleaned columns, parsed dates, handled missing values, bucketed rare categories.  
-2. **Feature Engineering:** Derived `year_month`; grouped high-cardinality categories into 'Other'.  
-3. **Modeling:** Train/test split with stratification; preprocessing via `OneHotEncoder` (categoricals) and `StandardScaler` (numerics).  
-4. **Algorithms:** Logistic Regression or Random Forest; report Accuracy & Macro F1; visualize confusion matrix.  
-5. **Interactive Prediction:** UI mirrors the model’s features to estimate the selected target.  
 
-**Interpretation Tips**  
-- Large class imbalance can inflate accuracy — prefer **Macro F1**.  
-- Many unique locations/LSOAs can cause sparse data; consider aggregating.  
-- For deployment, save the pipeline (download button) and serve with the same preprocessing.  
-
-**Recommendations for Stakeholders**  
-- Use **Top LSOAs** and the **monthly trend** to guide patrol allocation and community interventions.  
-- Monitor **crime type shifts** month-to-month; anomalies may indicate emerging hotspots.  
-- Combine with weather/events data to improve prediction and planning.  
-- Evaluate model drift quarterly; re-train as new months arrive.
-""")
-
-st.caption("Built with ❤️ using Streamlit, scikit-learn, Altair, and Plotly.")
+st.caption("Built by Ammar Ahmed Roll no 100496689 using Python on Streamlit")
 

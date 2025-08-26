@@ -99,6 +99,46 @@ def make_confusion_df(y_true, y_pred, labels) -> pd.DataFrame:
     return pd.DataFrame(cm, index=pd.Index(labels, name="True"), columns=pd.Index(labels, name="Pred"))
 
 
+
+st.sidebar.header("📥 Data (Multi-file)")
+multi_files = st.sidebar.file_uploader(
+    "Upload multiple CSV/Excel/Parquet files",
+    type=["csv","xlsx","xls","parquet"],
+    accept_multiple_files=True,
+    help="Select files from different folders; they will be merged."
+)
+
+def read_uploaded(f):
+    name = f.name.lower()
+    if name.endswith(".csv"):
+        df = pd.read_csv(f, low_memory=False, encoding="utf-8-sig")
+    elif name.endswith((".xlsx",".xls")):
+        df = pd.read_excel(f)
+    elif name.endswith(".parquet"):
+        df = pd.read_parquet(f)
+    else:
+        raise ValueError("Unsupported type")
+    df["source_name"] = f.name
+    return df
+
+if multi_files:
+    parts = []
+    for f in multi_files:
+        try:
+            parts.append(read_uploaded(f))
+        except Exception as e:
+            st.warning(f"Skipped {f.name}: {e}")
+    if parts:
+        df = pd.concat(parts, ignore_index=True, sort=False)
+        if "month" in df.columns:
+            df["month"] = pd.to_datetime(df["month"], errors="coerce")
+        if "month" in df.columns:
+            df["year_month"] = df["month"].dt.to_period("M").astype(str)
+        st.success(f"Merged {len(multi_files)} files → {len(df):,} rows, {df.shape[1]} columns")
+    else:
+        st.stop()
+
+
 st.sidebar.header("📥 Data")
 st.sidebar.write("Upload your Police.UK CSV or use the sample path if running in this notebook.")
 

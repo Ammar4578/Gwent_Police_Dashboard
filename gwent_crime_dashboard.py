@@ -372,7 +372,7 @@ except Exception as e:
 
 
 st.header("Methodology & Business Recommendations")
-st.markdown(""")
+st.markdown("")
 
 st.caption("Built by Ammar Ahmed Roll no 100496689 using Python on Streamlit")
 
